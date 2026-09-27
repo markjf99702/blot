@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Blot</title>
+  <meta name="description" content="A two-player game where folding the paper is a move. Drop blots of ink, then fold along a crease and your wet ink prints onto the other side. Play the computer or pass the phone.">
+  <meta property="og:title" content="Blot">
+  <meta property="og:description" content="Drop ink, fold the paper, and your wet ink prints across the crease.">
+  <meta property="og:image" content="https://junkdrawer.works/blot/og.png">
+  <meta property="og:url" content="https://junkdrawer.works/blot/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#cbb28b" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1d1815" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <noscript><p class="noscript">Blot needs JavaScript to fold the paper.</p></noscript>
+
+  <main id="app">
+    <section class="screen menu" id="menu" hidden>
+      <header class="masthead">
+        <div class="logo" id="logo" aria-hidden="true"></div>
+        <h1>Blot</h1>
+        <p class="lede">A game where folding the paper is a move. Drop blots of ink, then fold, and your wet ink prints onto the other side of the crease.</p>
+      </header>
+
+      <button type="button" class="primary" id="resume" hidden>Carry on with your game</button>
+
+      <div class="card">
+        <h2>Play the computer</h2>
+        <div class="choice" role="radiogroup" aria-label="How good the computer is" id="levels">
+          <button type="button" role="radio" data-level="easy">Easy</button>
+          <button type="button" role="radio" data-level="normal">Normal</button>
+          <button type="button" role="radio" data-level="hard">Hard</button>
+        </div>
+        <div class="choice" role="radiogroup" aria-label="Your ink" id="sides">
+          <button type="button" role="radio" data-side="1"><span class="dot red"></span>Red, first</button>
+          <button type="button" role="radio" data-side="2"><span class="dot blue"></span>Blue, second</button>
+        </div>
+        <button type="button" class="primary" id="startAi">Start</button>
+        <p class="record" id="record"></p>
+      </div>
+
+      <div class="card">
+        <h2>Two players</h2>
+        <p class="hint">One phone, passed back and forth. Red goes first.</p>
+        <button type="button" class="secondary" id="startTwo">Start a two-player game</button>
+      </div>
+
+      <button type="button" class="linkish" id="rulesLink">How to play</button>
+
+      <footer class="jd-foot">
+        <a href="https://junkdrawer.works/">Part of junkdrawer.works</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://junkdrawer.works/privacy.html">Privacy</a>
+      </footer>
+    </section>
+
+    <section class="screen play" id="play" hidden>
+      <header class="topbar">
+        <button type="button" class="icon-btn" id="toMenu" aria-label="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="scores">
+          <div class="score red" id="scoreRed">
+            <span class="who"><span class="pot" aria-hidden="true"></span><span id="nameRed">Red</span></span>
+            <span class="num" id="numRed">0</span>
+            <span class="wetcount" id="wetRed"></span>
+          </div>
+          <div class="score blue" id="scoreBlue">
+            <span class="who"><span class="pot" aria-hidden="true"></span><span id="nameBlue">Blue</span></span>
+            <span class="num" id="numBlue">0</span>
+            <span class="wetcount" id="wetBlue"></span>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" id="helpBtn" aria-label="How to play">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9.3a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1-1.3 1.9v.7"/><circle cx="12" cy="17.6" r=".6"/></svg>
+        </button>
+      </header>
+
+      <div class="stage">
+      <div class="table">
+        <div id="board"></div>
+      </div>
+
+      <div class="bar">
+        <p class="status" id="status" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" class="secondary" id="undo">Undo</button>
+          <button type="button" class="secondary" id="cancelFold" hidden>Cancel</button>
+          <button type="button" class="primary" id="foldBtn" hidden>Fold</button>
+          <button type="button" class="primary" id="againBar" hidden>Play again</button>
+        </div>
+      </div>
+      </div>
+
+      <div class="over" id="over" hidden>
+        <div class="over-card" role="dialog" aria-modal="false" aria-labelledby="overTitle">
+          <h2 id="overTitle"></h2>
+          <p id="overLine"></p>
+          <div class="over-actions">
+            <button type="button" class="primary" id="again">Play again</button>
+            <button type="button" class="secondary" id="overMenu">Menu</button>
+          </div>
+          <button type="button" class="linkish" id="overLook">Look at the paper</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="rules" id="rules" aria-labelledby="rulesTitle">
+    <div class="rules-inner">
+      <header>
+        <h2 id="rulesTitle">How to play</h2>
+        <button type="button" class="icon-btn" id="closeRules" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <p>Two inks, one sheet of paper. Red goes first, and on your turn you do one of two things.</p>
+
+      <div class="step">
+        <div class="demo" data-demo="drop"></div>
+        <div>
+          <h3>Drop a blot</h3>
+          <p>Put a blot of your ink on any blank square. It stays wet, and shiny, until you fold.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="demo" data-demo="fold"></div>
+        <div>
+          <h3>Or fold the paper</h3>
+          <p>Pick a crease with the tabs around the edge. Each of your wet blots prints onto the square facing it across the crease. Tap the tab twice, or press Fold.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="demo" data-demo="mud"></div>
+        <div>
+          <h3>Wet ink smears, dry ink is set</h3>
+          <p>Printed onto the other player’s wet ink, yours smears it into mud, which belongs to nobody. Dry ink never changes. After you fold, all your ink is dry.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="demo" data-demo="reach"></div>
+        <div>
+          <h3>Short folds reach less</h3>
+          <p>A crease near the edge only reaches as far as the smaller side. The fold preview shades what it can’t reach.</p>
+        </div>
+      </div>
+
+      <h3>Winning</h3>
+      <p>The game ends when there’s no blank paper left. Whoever holds more squares wins. Blue gets one extra point for going second.</p>
+      <h3>Why fold?</h3>
+      <p>A fold can print several squares in one turn and turn the other ink to mud, and it makes your ink safe. But it uses up your turn, and while your blots wait wet, a fold from the other side can smear them.</p>
+
+      <footer class="jd-foot">
+        <a href="https://junkdrawer.works/">Part of junkdrawer.works</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://junkdrawer.works/privacy.html">Privacy</a>
+      </footer>
+    </div>
+  </dialog>
+</body>
+</html>

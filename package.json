@@ -1,0 +1,16 @@
+{
+  "name": "blot",
+  "private": true,
+  "type": "module",
+  "description": "Drop ink, fold the paper, and your wet ink prints across the crease.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "test": "node --test test/unit.test.mjs && node test/e2e.mjs",
+    "build": "node scripts/build.mjs",
+    "sim": "node tools/sim.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "upng-js": "^2.1.0"
+  }
+}
