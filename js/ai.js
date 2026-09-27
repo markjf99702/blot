@@ -1,6 +1,6 @@
 // The computer player: alpha-beta search over drops and folds, deepening until its time runs out.
 
-import { EMPTY, RED, BLUE, MUD, WET, KOMI, other, foldPairs, creases } from './rules.js';
+import { EMPTY, RED, BLUE, MUD, WET, other, foldPairs, creases } from './rules.js';
 
 export const LEVELS = {
   easy: { depth: 1, ms: 200, slack: 2 },
@@ -59,14 +59,14 @@ export class Engine {
     return best;
   }
 
-  // Score from p's side, counting Blue's point.
+  // Score from p's side. Blue wins ties, so a level paper counts half a square toward Blue.
   diff(cells, p) {
     let d = 0;
     for (let i = 0; i < cells.length; i++) {
       const k = cells[i] & 3;
       if (k === RED) d++; else if (k === BLUE) d--;
     }
-    d -= KOMI;
+    d -= 0.5;
     return p === RED ? d : -d;
   }
 

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  EMPTY, RED, BLUE, MUD, WET, KOMI, newGame, play, legalMoves, isOver, score, leader, facing, foldPairs, foldChanges,
+  EMPTY, RED, BLUE, MUD, WET, newGame, play, legalMoves, isOver, score, leader, facing, foldPairs, foldChanges,
 } from '../js/rules.js';
 import { Engine } from '../js/ai.js';
 
@@ -77,15 +77,17 @@ test('a short fold only reaches as far as its smaller side', () => {
   assert.deepEqual(changes.map((c) => c.at), [at(0, 1)]);
 });
 
-test('the game ends when no blank paper is left, and Blue has a point for going second', () => {
+test('the game ends when no blank paper is left, and Blue wins a tie', () => {
   const s = newGame(n);
   for (let i = 0; i < n * n; i++) s.cells[i] = i < 18 ? RED : BLUE | (i % 2 ? WET : 0);
   assert.ok(isOver(s));
   assert.deepEqual(legalMoves(s), []);
   const sc = score(s.cells);
   assert.equal(sc[RED], 18);
-  assert.equal(sc.total[BLUE], 18 + KOMI);
+  assert.equal(sc[BLUE], 18);
   assert.equal(leader(s.cells), BLUE);
+  s.cells[35] = RED;
+  assert.equal(leader(s.cells), RED);
 });
 
 test('the computer folds first when the other side is about to smear its wet ink', () => {

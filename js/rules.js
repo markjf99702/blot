@@ -5,12 +5,10 @@
 // Red moves first. On your turn you either drop a blot of your ink on a blank square, or, if you have
 // wet ink, fold the paper along a crease. Folding presses each square against the one facing it across
 // the crease. Your wet ink prints onto blank paper and smears the other player's wet ink into mud; dry
-// ink is set and nothing changes it. Then your ink dries. When no blank paper is left, the game ends.
+// ink is set and nothing changes it. Then your ink dries. When no blank paper is left, the game ends,
+// and whoever holds more squares wins. Blue moves second, so Blue wins a tie.
 
 export const EMPTY = 0, RED = 1, BLUE = 2, MUD = 3, WET = 4;
-
-// Blue moves second, so Blue starts a point up.
-export const KOMI = 1;
 
 export const other = (p) => 3 - p;
 
@@ -141,7 +139,7 @@ export function play(state, move) {
   return { state: next, changes };
 }
 
-// Squares each side holds, with Blue's point for going second added to `total`.
+// Squares each side holds.
 export function score(cells) {
   let r = 0, b = 0, m = 0;
   for (let i = 0; i < cells.length; i++) {
@@ -150,11 +148,11 @@ export function score(cells) {
     else if (k === BLUE) b++;
     else if (k === MUD) m++;
   }
-  return { [RED]: r, [BLUE]: b, mud: m, total: { [RED]: r, [BLUE]: b + KOMI } };
+  return { [RED]: r, [BLUE]: b, mud: m };
 }
 
-// Who is ahead counting Blue's point, or 0 for level.
+// Who would win if the game ended now: more squares, and Blue on a tie.
 export function leader(cells) {
-  const { total } = score(cells);
-  return total[RED] > total[BLUE] ? RED : total[BLUE] > total[RED] ? BLUE : 0;
+  const s = score(cells);
+  return s[RED] > s[BLUE] ? RED : BLUE;
 }

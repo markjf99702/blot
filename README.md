@@ -18,7 +18,7 @@
 - **Or fold the paper.** Tap one of the tabs around the edge to pick a crease. The preview outlines your wet blots, shows a ghost of each print, and shades whatever the fold can't reach. Tap the tab again, or press Fold, and the paper folds over and back.
 - **What prints.** Each of your wet blots prints onto the square facing it across the crease. Blank paper takes a copy, flipped like a mirror image. The other player's wet ink smears into mud, which belongs to nobody. Dry ink never changes. Then all your ink dries. The other player's ink isn't pressed by your fold, and stays wet.
 - **Short folds reach less.** A crease near the edge only reaches as far as the smaller side.
-- **Winning.** The game ends when there's no blank paper left. Whoever holds more squares wins. Blue gets one point for going second.
+- **Winning.** The game ends when there's no blank paper left. Whoever holds more squares wins. Mud counts for nobody, and a tie goes to Blue, for going second.
 - **Why it's a game.** A fold can print several squares in one turn and smear the other ink into mud, and it makes your ink safe. But it costs you a turn, and while your blots sit wet, the other side can fold first and smear them.
 - **The computer** searches ahead over every drop and fold, a move or two on Easy and Normal and as far as it can in a second and a half on Hard. Easy and Normal sometimes take a slightly worse move on purpose. It thinks in the background, so the page keeps moving.
 - **Undo** takes back your last move (and the computer's reply). Old folds leave creases in the paper.
@@ -26,7 +26,7 @@
 
 ## How the rules were settled
 
-Before any of the board was drawn, the computer played itself hundreds of times under different rules (`tools/sim.mjs` is what's left of that). Folds that pressed both players' ink ended nearly every game in a draw. When wet ink could be printed over after it dried, nobody folded until the paper was full. Making dry ink permanent, and letting only the folder's ink print, gave games where folds come every few turns and the stronger player wins. Red, moving first, still won most games, so Blue gets a point: with it, games between two Hard computers come out close to even.
+Before any of the board was drawn, the computer played itself hundreds of times under different rules (`tools/sim.mjs` is what's left of that). Folds that pressed both players' ink ended nearly every game in a draw. When wet ink could be printed over after it dried, nobody folded until the paper was full. Making dry ink permanent, and letting only the folder's ink print, gave games where folds come every few turns and the stronger player wins. Red, moving first, still won most games. Giving Blue a whole point overcorrected (32 games between two Hard computers: Red 4, Blue 14, 14 draws), so instead Blue wins ties, and there are no draws. With that rule, 32 games between two Hard computers went 18 to 14 for Red, and 60 between two Normal ones went 40 to 20. Red still has an edge, and it shrinks the better both sides play.
 
 ## Running it
 

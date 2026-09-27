@@ -1,7 +1,7 @@
 // The page: the menu, a game in progress, the computer's turns, saving, and the how-to-play sheet.
 
 import {
-  RED, BLUE, WET, EMPTY, KOMI, newGame, play, isOver, score, hasWet, foldChanges,
+  RED, BLUE, WET, EMPTY, newGame, play, isOver, score, leader, hasWet, foldChanges,
 } from './rules.js';
 import { Engine } from './ai.js';
 import { Board, mirrorLook } from './board.js';
@@ -133,9 +133,7 @@ function paintRecord() {
   for (const lv of ['easy', 'normal', 'hard']) {
     const r = record[lv];
     if (!r) continue;
-    const bits = [`${r.w} won`, `${r.l} lost`];
-    if (r.d) bits.push(`${r.d} drawn`);
-    parts.push(`${lv[0].toUpperCase() + lv.slice(1)}: ${bits.join(', ')}`);
+    parts.push(`${lv[0].toUpperCase() + lv.slice(1)}: ${r.w} won, ${r.l} lost`);
   }
   $('record').textContent = parts.join(' · ');
 }
@@ -190,7 +188,7 @@ function paint() {
   $('nameRed').textContent = nm[RED];
   $('nameBlue').textContent = nm[BLUE];
   $('numRed').textContent = sc[RED];
-  $('numBlue').innerHTML = `${sc[BLUE]}<small>+${KOMI}</small>`;
+  $('numBlue').textContent = sc[BLUE];
   const wet = (p) => snap.cells.filter((v) => v === (p | WET)).length;
   $('wetRed').textContent = wet(RED) ? `${wet(RED)} wet` : '';
   $('wetBlue').textContent = wet(BLUE) ? `${wet(BLUE)} wet` : '';
@@ -233,17 +231,13 @@ function statusText(snap, preview) {
 
 function paintOver(sc) {
   const nm = names();
-  const r = sc.total[RED], b = sc.total[BLUE];
-  let title;
-  if (r === b) title = 'A draw';
-  else {
-    const winner = r > b ? RED : BLUE;
-    if (game.mode === 'ai') title = winner === game.human ? 'You win' : 'The computer wins';
-    else title = `${nm[winner]} wins`;
-  }
-  $('overTitle').textContent = title;
+  const winner = leader(game.now.cells);
+  $('overTitle').textContent = game.mode === 'ai'
+    ? (winner === game.human ? 'You win' : 'The computer wins')
+    : `${nm[winner]} wins`;
+  const tie = sc[RED] === sc[BLUE] ? ' A tie goes to Blue, for going second.' : '';
   const mud = sc.mud ? ` ${sc.mud} ${sc.mud === 1 ? 'square' : 'squares'} of mud.` : '';
-  $('overLine').textContent = `Red ${sc[RED]}, Blue ${sc[BLUE]} + ${KOMI} for going second.${mud}`;
+  $('overLine').textContent = `Red ${sc[RED]}, Blue ${sc[BLUE]}.${tie}${mud}`;
 }
 
 // ---------- Moves ----------
@@ -326,10 +320,8 @@ async function move(m) {
 
 function finish() {
   if (game.mode !== 'ai' || game.recorded) return;
-  const sc = score(game.now.cells);
-  const me = sc.total[game.human], them = sc.total[3 - game.human];
-  const r = record[game.level] || (record[game.level] = { w: 0, l: 0, d: 0 });
-  if (me > them) r.w++; else if (me < them) r.l++; else r.d++;
+  const r = record[game.level] || (record[game.level] = { w: 0, l: 0 });
+  if (leader(game.now.cells) === game.human) r.w++; else r.l++;
   game.recorded = true;
   save();
 }

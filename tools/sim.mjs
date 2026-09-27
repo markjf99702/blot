@@ -1,6 +1,6 @@
 // Plays the computer against itself and prints how the games went.
 // node tools/sim.mjs [games] [size] [red level] [blue level] [seed]
-import { newGame, play, isOver, score } from '../js/rules.js';
+import { newGame, play, isOver, score, leader } from '../js/rules.js';
 import { Engine } from '../js/ai.js';
 
 const games = +(process.argv[2] || 20), n = +(process.argv[3] || 6);
@@ -22,12 +22,12 @@ for (let g = 0; g < games; g++) {
     if (r.move.type === 'fold') { folds++; changed += res.changes.length; }
     s = res.state;
   }
-  const sc = score(s.cells), d = sc.total[1] - sc.total[2];
+  const sc = score(s.cells), d = sc[1] - sc[2];
   margins[d] = (margins[d] || 0) + 1;
-  wins[d > 0 ? 1 : d < 0 ? 2 : 0]++;
+  wins[leader(s.cells)]++;
   plies += s.ply; mud += sc.mud;
 }
-console.log(`${n}x${n} red=${level[1]} blue=${level[2]}: red ${wins[1]}, blue ${wins[2]}, draws ${wins[0]} | ` +
+console.log(`${n}x${n} red=${level[1]} blue=${level[2]}: red ${wins[1]}, blue ${wins[2]} (ties go to blue) | ` +
   `plies ${(plies / games).toFixed(1)}, folds ${(folds / games).toFixed(1)} (avg ${(changed / Math.max(folds, 1)).toFixed(1)} squares), ` +
   `mud ${(mud / games).toFixed(1)} | depth ${(depth / moves).toFixed(1)}, slowest ${slowest.toFixed(0)}ms, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 console.log('margins (red − blue):', Object.entries(margins).sort((a, b) => a[0] - b[0]).map(([k, v]) => `${k}:${v}`).join(' '));
