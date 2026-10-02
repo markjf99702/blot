@@ -1,6 +1,6 @@
 # Blot
 
-**Play it: [junkdrawer.works/blot](https://junkdrawer.works/blot/)**
+**Play it: [blot.junkdrawer.works](https://blot.junkdrawer.works/)**
 
 **A two-player game where folding the paper is a move.** You and the other player drop blots of ink on a sheet of graph paper. On your turn you can fold the sheet along a crease instead, and every blot of yours that's still wet prints a mirror copy onto the square facing it, the way a butterfly painting does. Play the computer at three levels, or pass one phone back and forth.
 

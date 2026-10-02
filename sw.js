@@ -2,9 +2,9 @@
 // Anything the person saves lives in localStorage, not here.
 // Network first, so a new version shows up as soon as you're online.
 
-const CACHE = 'blot-v1'; // bump the number when the file list changes
+const CACHE = 'blot-v2'; // bump the number when the file list changes
 const SHELL = [
-  './', 'index.html', 'icon.svg', 'manifest.webmanifest',
+  './', 'index.html', 'carry.js', 'icon.svg', 'manifest.webmanifest',
   'css/app.css', 'js/app.js', 'js/rules.js', 'js/ai.js', 'js/worker.js', 'js/board.js', 'js/blots.js',
   'js/logo.js', 'js/demos.js', 'fonts/fraunces.woff2', 'fonts/figtree.woff2', 'icon-192.png',
 ];
