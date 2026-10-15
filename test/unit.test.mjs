@@ -184,3 +184,8 @@ test('the simulator plays a different game every time', () => {
   const out = execFileSync(process.execPath, [sim, '100', '6', 'easy', 'easy', '3']).toString();
   assert.match(out, /100 games \(100 different\)/, out);
 });
+
+test("the simulator doesn't take a misspelt player for Normal", () => {
+  const sim = fileURLToPath(new URL('../tools/sim.mjs', import.meta.url));
+  assert.throws(() => execFileSync(process.execPath, [sim, '1', '6', 'greedy', 'normal'], { stdio: 'pipe' }), /No player called greedy/);
+});

@@ -6,7 +6,7 @@
 //   careful  takes what a move gains, less the best the other side can answer, plus a little for the
 //            fold it sets up for itself.
 import { newGame, play, isOver, score, leader, legalMoves, foldChanges, creases, hasWet, other, BLUE } from '../js/rules.js';
-import { Engine } from '../js/ai.js';
+import { Engine, LEVELS } from '../js/ai.js';
 
 const games = +(process.argv[2] || 20), n = +(process.argv[3] || 6);
 const level = { 1: process.argv[4] || 'normal', 2: process.argv[5] || 'normal' };
@@ -46,6 +46,12 @@ const people = {
     return anyOf(pool);
   },
 };
+
+// The engine plays Normal for a level it doesn't know, so a misspelt name would quietly do that here too.
+const players = [...Object.keys(LEVELS), ...Object.keys(people)];
+for (const who of [level[1], level[2]]) {
+  if (!players.includes(who)) { console.error(`No player called ${who}. Pick from: ${players.join(', ')}.`); process.exit(1); }
+}
 
 const engine = new Engine(n);
 const wins = { 1: 0, 2: 0, 0: 0 }, margins = {}, different = new Set();
