@@ -376,7 +376,9 @@ svg .preview .ghost-mud { fill: var(--mud); fill-opacity: .45; stroke: var(--mud
 .over-card {
   background: var(--card); border-radius: 22px; padding: 20px 18px 10px; width: min(420px, 100%);
   text-align: center; box-shadow: 0 16px 40px rgba(20, 10, 0, .3);
-  animation: rise .35s cubic-bezier(.2, .8, .3, 1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .over-card { animation: rise .35s cubic-bezier(.2, .8, .3, 1); }
 }
 .over-card h2 { font-family: var(--display); font-size: 2rem; margin: 0 0 .3rem; font-weight: 700; }
 .over-card p { margin: 0 0 14px; }

@@ -276,6 +276,15 @@ assert.equal(await page3.evaluate(() => getComputedStyle(document.querySelector(
   await page3.evaluate(() => getComputedStyle(document.querySelector('.dot.blue')).boxShadow), "Blue's score dot has no ring");
 await dark.close();
 
+// With reduced motion the result card just appears; otherwise it rises into place.
+const still = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+const page4 = await still.newPage();
+await page4.goto(base);
+const rise = (p) => p.evaluate(() => getComputedStyle(document.querySelector('.over-card')).animationName);
+assert.equal(await rise(page4), 'none', 'the result card moves with reduced motion on');
+assert.equal(await rise(page), 'rise');
+await still.close();
+
 // How to play opens at the top each time, with its moving examples in view.
 await page.click('#helpBtn');
 assert.ok(await page.evaluate(() => { const r = document.getElementById('rules'); r.scrollTop = 400; return r.scrollTop; }) > 0);
