@@ -128,14 +128,12 @@ await page.click('#overMenu');
 const computerFolds = Array(36).fill(0);
 for (const r of [0, 1, 2, 3]) { computerFolds[r * 6] = 1 | 4; computerFolds[r * 6 + 5] = 2 | 4; }
 await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 8, history: [] }, { mode: 'ai', level: 'hard', human: 2 }), computerFolds);
-const hovered = await page.evaluate(() => new Promise((done) => {
+const hovered = await (await page.waitForFunction(() => {
   const status = document.getElementById('status');
-  (function look() {
-    if (!status.textContent.includes('folds here')) { setTimeout(look, 20); return; }
-    document.querySelector('.tab-h0[data-line="2"]').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
-    done({ preview: !!document.querySelector('.paper > svg.ink .preview'), status: status.textContent });
-  })();
-}));
+  if (!status.textContent.includes('folds here')) return false;
+  document.querySelector('.tab-h0[data-line="2"]').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+  return { preview: !!document.querySelector('.paper > svg.ink .preview'), status: status.textContent };
+}, null, { timeout: 15000 })).jsonValue();
 assert.deepEqual(hovered, { preview: true, status: 'The computer folds here.' }, "the mouse over a tab wiped the computer's fold preview");
 await idle();
 // ...and doesn't show what your own fold prints before the paper lands.
@@ -153,7 +151,7 @@ await idle();
 // Keyboard focus comes back to the paper once it's your turn again: after a drop against the computer...
 const focused = () => page.evaluate(() => document.activeElement.getAttribute('aria-label') || document.activeElement.tagName);
 await page.evaluate(() => blot.load({ cells: Array(36).fill(0), turn: 1, ply: 0, history: [] }, { mode: 'ai', level: 'easy', human: 1 }));
-await page.focus('.cell[tabindex="0"]');
+await cell(0).focus();
 await page.keyboard.press('ArrowRight');
 await page.keyboard.press('ArrowDown');
 await page.keyboard.press('Enter');
@@ -189,14 +187,11 @@ await idle();
 
 // Going to the menu while the computer shows where it will fold stops that move. It thinks again when you carry on.
 await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 8, history: [] }, { mode: 'ai', level: 'hard', human: 2 }), computerFolds);
-await page.evaluate(() => new Promise((done) => {
-  const status = document.getElementById('status');
-  (function look() {
-    if (!status.textContent.includes('folds here')) { setTimeout(look, 20); return; }
-    document.getElementById('toMenu').click();
-    done();
-  })();
-}));
+await page.waitForFunction(() => {
+  if (!document.getElementById('status').textContent.includes('folds here')) return false;
+  document.getElementById('toMenu').click();
+  return true;
+}, null, { timeout: 15000 });
 await page.waitForTimeout(2500);                     // longer than the preview and the fold
 assert.equal(await page.evaluate(() => blot.game.now.ply), 8, 'the computer moved while you were on the menu');
 await page.click('#resume');
