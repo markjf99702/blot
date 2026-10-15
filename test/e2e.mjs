@@ -186,6 +186,21 @@ const pop = await page.evaluate(() => {
 });
 assert.equal(pop, 3, 'a new blot did not pop');
 await idle();
+
+// Going to the menu while the computer shows where it will fold stops that move. It thinks again when you carry on.
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 8, history: [] }, { mode: 'ai', level: 'hard', human: 2 }), computerFolds);
+await page.evaluate(() => new Promise((done) => {
+  const status = document.getElementById('status');
+  (function look() {
+    if (!status.textContent.includes('folds here')) { setTimeout(look, 20); return; }
+    document.getElementById('toMenu').click();
+    done();
+  })();
+}));
+await page.waitForTimeout(2500);                     // longer than the preview and the fold
+assert.equal(await page.evaluate(() => blot.game.now.ply), 8, 'the computer moved while you were on the menu');
+await page.click('#resume');
+await page.waitForFunction(() => blot.game.now.ply === 9 && blot.idle(), null, { timeout: 15000 });
 await page.click('#toMenu');
 
 // Against the computer as Blue: it moves first.

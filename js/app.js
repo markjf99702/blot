@@ -106,6 +106,7 @@ let pending = null;   // the crease being previewed { axis, line }
 let hover = null;     // a crease the mouse is over
 let busy = false;     // a move is animating or the computer is thinking
 let thinking = false;
+let computing = false; // the computer's turn, from thinking through showing where it will fold
 let showOver = true;
 let turnToken = 0;    // bumped when you leave or start a game, so a computer move still on its way is dropped
 let refocus = null;   // what had keyboard focus when you moved, to put back once it's your turn again
@@ -114,6 +115,7 @@ function resetTurn() {
   turnToken++;
   busy = false;
   thinking = false;
+  computing = false;
 }
 
 function isHumanTurn() {
@@ -138,7 +140,7 @@ function show(id) {
 function openMenu() {
   pending = null;
   hover = null;
-  if (thinking) resetTurn();
+  if (computing) resetTurn();
   show('menu');
   $('resume').hidden = !(game && !game.over);
   paintChoices();
@@ -374,6 +376,7 @@ async function maybeComputer() {
   const token = turnToken;
   busy = true;
   thinking = true;
+  computing = true;
   paint();
   await wait(80);
   const t0 = performance.now();
@@ -389,6 +392,7 @@ async function maybeComputer() {
     await wait(1000);
     if (token !== turnToken) return;
   }
+  computing = false;
   busy = false;
   await move(m);
 }
