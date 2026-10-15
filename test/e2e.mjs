@@ -217,6 +217,13 @@ const sheet = await page.evaluate(() => {
 });
 assert.deepEqual(sheet, { flap: false, clipped: '', tappable: true }, "the last game's fold showed over the new one");
 await idle();
+
+// The spare tab at the far end of a crease is hidden from screen readers, so a tap on it picks the crease without focusing it.
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 2, history: [] }), bothWet);
+await page.click('.tab-v1[data-line="2"]');
+assert.equal(await page.isVisible('#foldBtn'), true, 'the spare tab did not pick its crease');
+assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-hidden')), null, 'the spare tab took focus');
+await page.click('#cancelFold');
 await page.click('#toMenu');
 
 // Against the computer as Blue: it moves first.

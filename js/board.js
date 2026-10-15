@@ -73,6 +73,7 @@ export class Board {
             if (end === 1) {
               t.setAttribute('aria-hidden', 'true');
               t.tabIndex = -1;
+              t.addEventListener('mousedown', (e) => e.preventDefault()); // a click mustn't focus what screen readers can't see
             }
             t.innerHTML = '<i></i>';
             t.addEventListener('click', () => opts.onTab(axis, k));
