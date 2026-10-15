@@ -104,6 +104,26 @@ await page.evaluate((cells) => {
 await page.reload();
 assert.match(await page.textContent('#record'), /Normal: 2 won, 0 lost · Hard: 1 won, 0 lost/);
 
+// The result waits for the last fold to land. Meanwhile the paper stays put and the top bar still works.
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 35, history: [] }), lastFold);
+const landing = await page.evaluate(() => {
+  const top = () => document.querySelector('.paper').getBoundingClientRect().top;
+  const before = top();
+  blot.play({ type: 'fold', axis: 'v', line: 3 });
+  const b = document.getElementById('toMenu').getBoundingClientRect();
+  return {
+    folding: !!document.querySelector('.flap'),
+    result: !document.getElementById('over').hidden,
+    moved: Math.round(top() - before),
+    menu: !!document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2).closest('#toMenu'),
+  };
+});
+assert.deepEqual(landing, { folding: true, result: false, moved: 0, menu: true }, 'the result came up before the last fold landed');
+await idle();
+assert.equal(await page.isVisible('#over'), true, 'no result once the last fold landed');
+assert.match(await page.textContent('#overTitle'), /Red wins/);
+await page.click('#overMenu');
+
 // Against the computer as Blue: it moves first.
 await page.click('[data-level="easy"]');
 await page.click('[data-side="2"]');

@@ -195,22 +195,23 @@ function paint() {
   $('scoreRed').classList.toggle('turn', !game.over && snap.turn === RED);
   $('scoreBlue').classList.toggle('turn', !game.over && snap.turn === BLUE);
 
-  if (game.over) paintOver(sc);
+  const ended = game.over && !busy; // the result waits for the last move to land
+  if (ended) paintOver(sc);
   const status = $('status');
   status.classList.toggle('thinking', thinking);
-  status.innerHTML = statusText(snap, preview);
+  status.innerHTML = statusText(snap, preview, ended);
 
-  $('undo').hidden = game.over || !!pending;
+  $('undo').hidden = ended || !!pending;
   $('undo').disabled = busy || !canUndo();
   $('cancelFold').hidden = !pending;
   $('foldBtn').hidden = !pending;
   if (pending && preview) $('foldBtn').textContent = preview.changes.length ? `Fold (+${preview.changes.length})` : 'Fold';
-  $('againBar').hidden = !game.over || showOver;
-  $('over').hidden = !game.over || !showOver;
+  $('againBar').hidden = !ended || showOver;
+  $('over').hidden = !ended || !showOver;
 }
 
-function statusText(snap, preview) {
-  if (game.over) return `${$('overTitle').textContent}. No blank paper left.`;
+function statusText(snap, preview, ended) {
+  if (ended) return `${$('overTitle').textContent}. No blank paper left.`;
   if (thinking) return 'The computer is thinking';
   if (busy) return '&nbsp;';
   const nm = names();
