@@ -149,6 +149,33 @@ const early = await page.evaluate(() => {
 });
 assert.equal(early, false, 'the mouse over a tab showed the prints before the fold landed');
 await idle();
+
+// Keyboard focus comes back to the paper once it's your turn again: after a drop against the computer...
+const focused = () => page.evaluate(() => document.activeElement.getAttribute('aria-label') || document.activeElement.tagName);
+await page.evaluate(() => blot.load({ cells: Array(36).fill(0), turn: 1, ply: 0, history: [] }, { mode: 'ai', level: 'easy', human: 1 }));
+await page.focus('.cell[tabindex="0"]');
+await page.keyboard.press('ArrowRight');
+await page.keyboard.press('ArrowDown');
+await page.keyboard.press('Enter');
+await page.waitForFunction(() => blot.game.now.ply === 2 && blot.idle(), null, { timeout: 10000 });
+assert.equal(await focused(), 'Row 2, column 2: red, wet', 'keyboard focus fell off the paper after a drop');
+// ...after a fold picked on its tab...
+const bothWet = Array(36).fill(0);
+bothWet[6] = 1 | 4; bothWet[29] = 2 | 4;
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 2, history: [] }), bothWet);
+await page.focus('.tab-v0[data-line="3"]');
+await page.keyboard.press('Enter');
+await page.keyboard.press('Enter');
+await idle();
+assert.equal(await focused(), 'Fold between columns 3 and 4', 'keyboard focus fell off the paper after a fold');
+// ...and after the Fold button.
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 2, history: [] }), bothWet);
+await page.focus('.tab-v0[data-line="3"]');
+await page.keyboard.press('Enter');
+await page.focus('#foldBtn');
+await page.keyboard.press('Enter');
+await idle();
+assert.match(await focused(), /^Row \d, column \d/, 'keyboard focus fell off the paper after the Fold button');
 await page.click('#toMenu');
 
 // Against the computer as Blue: it moves first.

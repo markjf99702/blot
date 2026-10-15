@@ -104,6 +104,15 @@ export class Board {
     this.cellButtons[i].focus();
   }
 
+  // Keyboard focus back after a move: on the same square, or tab if it can still be pressed,
+  // or else on the square the arrow keys were last on.
+  focusBack(el) {
+    const i = this.cellButtons.indexOf(el);
+    if (i >= 0) return this.focusCell(i);
+    if (this.tabs.includes(el) && !el.disabled) return el.focus();
+    this.focusCell(Math.max(0, this.cellButtons.findIndex((b) => b.tabIndex === 0)));
+  }
+
   // view: { cells, looks, marks: [{axis, line}], turn }
   // extra: { preview: { axis, line, changes, player }, canFold, pop: i }
   render(view, extra = {}) {

@@ -87,6 +87,7 @@ let busy = false;     // a move is animating or the computer is thinking
 let thinking = false;
 let showOver = true;
 let turnToken = 0;    // bumped when you leave or start a game, so a computer move still on its way is dropped
+let refocus = null;   // what had keyboard focus when you moved, to put back once it's your turn again
 
 function resetTurn() {
   turnToken++;
@@ -212,6 +213,12 @@ function paint() {
   if (pending && preview) $('foldBtn').textContent = preview.changes.length ? `Fold (+${preview.changes.length})` : 'Fold';
   $('againBar').hidden = !ended || showOver;
   $('over').hidden = !ended || !showOver;
+
+  // The squares and tabs are disabled while a move plays out, which drops keyboard focus; put it back.
+  if (refocus && human && !busy) {
+    if (!document.activeElement || document.activeElement === document.body) board.focusBack(refocus);
+    refocus = null;
+  }
 }
 
 function statusText(snap, preview, ended) {
@@ -286,7 +293,15 @@ function onTab(axis, line) {
   paint();
 }
 
+function noteFocus() {
+  const el = document.activeElement;
+  let keyboard = false;
+  try { keyboard = !!el && el.matches(':focus-visible'); } catch { /* an older browser */ }
+  refocus = keyboard ? el : null;
+}
+
 async function move(m) {
+  if (isHumanTurn()) noteFocus();
   const before = game.now;
   const player = before.turn;
   const { state, changes } = play(stateOf(before), m);
