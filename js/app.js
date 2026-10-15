@@ -1,7 +1,7 @@
 // The page: the menu, a game in progress, the computer's turns, saving, and the how-to-play sheet.
 
 import {
-  RED, BLUE, WET, EMPTY, newGame, play, isOver, score, leader, hasWet, foldChanges,
+  RED, BLUE, MUD, WET, EMPTY, newGame, play, isOver, score, leader, hasWet, foldChanges,
 } from './rules.js';
 import { Engine } from './ai.js';
 import { Board, mirrorLook } from './board.js';
@@ -16,17 +16,38 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- Saving ----------
 
+const LEVELS = ['easy', 'normal', 'hard'];
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
 function load() {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* private window or blocked storage */ }
+    const data = JSON.parse(localStorage.getItem(KEY));
+    if (isObj(data)) return data;
+  } catch { /* private window, blocked storage, or not JSON */ }
   return {};
 }
+
+// A damaged save mustn't stop the page, so any part of it that isn't the shape save() writes is left out.
+const INKS = [EMPTY, RED, BLUE, MUD, RED | WET, BLUE | WET];
+const goodSnap = (s) => isObj(s) && (s.turn === RED || s.turn === BLUE) && Number.isInteger(s.ply) &&
+  Array.isArray(s.cells) && s.cells.length === N * N && s.cells.every((v) => INKS.includes(v)) &&
+  Array.isArray(s.looks) && s.looks.length === N * N && s.looks.every((l) => l === null || isObj(l)) &&
+  Array.isArray(s.history) && s.history.every(isObj);
+const goodGame = (g) => isObj(g) && g.n === N && goodSnap(g.now) && Array.isArray(g.past) && g.past.every(goodSnap) &&
+  (g.mode === 'two' || (g.mode === 'ai' && LEVELS.includes(g.level) && (g.human === RED || g.human === BLUE)));
+
 const saved = load();
-const prefs = { level: 'normal', side: RED, ...(saved.prefs || {}) };
-const record = saved.record || {};
-let game = saved.game && saved.game.now && saved.game.n === N ? saved.game : null;
+const savedPrefs = isObj(saved.prefs) ? saved.prefs : {};
+const prefs = {
+  level: LEVELS.includes(savedPrefs.level) ? savedPrefs.level : 'normal',
+  side: savedPrefs.side === BLUE ? BLUE : RED,
+};
+const record = {};
+for (const lv of LEVELS) {
+  const r = isObj(saved.record) && saved.record[lv];
+  if (isObj(r) && Number.isFinite(r.w) && Number.isFinite(r.l)) record[lv] = r;
+}
+let game = goodGame(saved.game) ? saved.game : null;
 
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify({ prefs, record, game })); } catch { /* ignore */ }
@@ -131,7 +152,7 @@ function paintChoices() {
 
 function paintRecord() {
   const parts = [];
-  for (const lv of ['easy', 'normal', 'hard']) {
+  for (const lv of LEVELS) {
     const r = record[lv];
     if (!r) continue;
     parts.push(`${lv[0].toUpperCase() + lv.slice(1)}: ${r.w} won, ${r.l} lost`);

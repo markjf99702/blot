@@ -196,6 +196,40 @@ await page.waitForFunction(() => blot.game.now.ply >= 1, null, { timeout: 10000 
 await idle();
 assert.equal(await page.evaluate(() => blot.game.now.turn), 2, "it isn't your turn after the computer's move");
 
+// A damaged save doesn't stop the page: whatever isn't the shape the game saves is left out, and the rest is kept.
+const other = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+const page2 = await other.newPage();
+page2.on('pageerror', e => problems.push(e.message));
+page2.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') problems.push(m.text()); });
+await page2.goto(base);
+const opensWith = async (raw) => {
+  await page2.evaluate((raw) => { localStorage.setItem('blot.v1', raw); localStorage.setItem('blot.v1.seenRules', '1'); }, raw);
+  await page2.reload();
+  return page2.evaluate(() => ({
+    menu: !document.getElementById('menu').hidden,
+    checked: [...document.querySelectorAll('[aria-checked="true"]')].map((b) => b.textContent.trim()),
+    record: document.getElementById('record').textContent,
+  }));
+};
+for (const raw of ['null', '42', '[1,2]', '{oops',
+  JSON.stringify({ prefs: { level: 'impossible', side: 7 }, record: { easy: 'x', hard: null } }),
+  JSON.stringify({ game: { n: 6, now: { turn: 1 }, mode: 'two', past: [] } }),
+  JSON.stringify({ game: { n: 6, now: { cells: [0, 0, 0], turn: 1, ply: 0, history: [], looks: [], last: -1 }, mode: 'two', past: [] } }),
+  JSON.stringify({ game: { n: 6, now: { cells: Array(36).fill(0), turn: 1, ply: 0, history: [], looks: Array(36).fill(null), last: -1 }, mode: 'two' } }),
+]) {
+  assert.deepEqual(await opensWith(raw), { menu: true, checked: ['Normal', 'Red, first'], record: '' }, `the page did not open cleanly from the save ${raw}`);
+}
+await page2.click('#startAi');
+await page2.locator('.cell').nth(0).click();
+await page2.waitForFunction(() => blot.game.now.ply >= 1, null, { timeout: 10000 });
+const good = JSON.parse(await page.evaluate(() => localStorage.getItem('blot.v1')));
+good.record.easy = { w: 3, l: 1, d: 2 };              // the very first version also counted draws
+await opensWith(JSON.stringify(good));
+assert.equal(await page2.evaluate(() => JSON.stringify(blot.game.now.cells)), JSON.stringify(good.game.now.cells), 'a good save lost its game');
+await page2.click('#toMenu');
+assert.equal(await page2.textContent('#record'), 'Easy: 3 won, 1 lost · Normal: 2 won, 0 lost · Hard: 1 won, 0 lost');
+await other.close();
+
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 for (const dir of ['js', 'css', 'fonts']) {
