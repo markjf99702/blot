@@ -1,6 +1,8 @@
 // The rules and the computer player:  node --test test/unit.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import {
   EMPTY, RED, BLUE, MUD, WET, newGame, play, legalMoves, isOver, score, leader, facing, foldPairs, foldChanges,
 } from '../js/rules.js';
@@ -8,6 +10,11 @@ import { Engine } from '../js/ai.js';
 
 const n = 6;
 const at = (r, c) => r * n + c;
+// Seeded dice for the computer. Math.imul keeps the multiply exact; a plain * loses the low bits past 2^53
+// and the numbers repeat after a few hundred.
+function dice(seed) {
+  return () => ((seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 2 ** 32);
+}
 function position(cellsByIndex, turn = RED) {
   const s = newGame(n);
   for (const [i, v] of Object.entries(cellsByIndex)) s.cells[i] = v;
@@ -117,8 +124,7 @@ test("the computer doesn't fold for nothing at the end of a game it has lost", (
   const oneLeft = sheet(['111231', '205111', '221131', '222222', '222211', '111222'], RED);
   // Normal did the same with two blanks left: Blue 15 to Red 19, Blue to move.
   const twoLeft = sheet(['226112', '121221', '221111', '220112', '021111', '221111'], BLUE);
-  let seed = 11;
-  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+  const rnd = dice(11);
   const engine = new Engine(n);
   for (const s of [oneLeft, twoLeft]) {
     for (const level of ['easy', 'normal', 'hard']) {
@@ -132,8 +138,7 @@ test("the computer doesn't fold for nothing at the end of a game it has lost", (
 
 test('in whole games, Easy and Normal never fold for nothing', () => {
   // Before the fix, about one game in seven on Easy and one in four on Normal ended with one.
-  let seed = 5;
-  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+  const rnd = dice(5);
   const engine = new Engine(n);
   for (const level of ['easy', 'normal']) {
     for (let g = 0; g < 15; g++) {
@@ -149,12 +154,18 @@ test('in whole games, Easy and Normal never fold for nothing', () => {
 });
 
 test('every level plays a legal game to the end', () => {
-  let seed = 3;
-  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+  const rnd = dice(3);
   const engine = new Engine(n);
   for (const level of ['easy', 'normal']) {
     let s = newGame(n);
     while (!isOver(s)) s = play(s, engine.choose(s, level, rnd).move).state;
     assert.equal(s.cells.filter((v) => v === EMPTY).length, 0);
   }
+});
+
+test('the simulator plays a different game every time', () => {
+  // Its dice used to repeat after a few hundred numbers: these 100 games were 45 games, some many times over.
+  const sim = fileURLToPath(new URL('../tools/sim.mjs', import.meta.url));
+  const out = execFileSync(process.execPath, [sim, '100', '6', 'easy', 'easy', '3']).toString();
+  assert.match(out, /100 games \(100 different\)/, out);
 });
