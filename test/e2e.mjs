@@ -26,7 +26,7 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, de
 const page = await ctx.newPage();
 const problems = [];
 page.on('pageerror', e => problems.push(e.message));
-page.on('console', m => { if (m.type() === 'error') problems.push(m.text()); });
+page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') problems.push(m.text()); });
 page.on('requestfailed', r => problems.push('failed: ' + r.url()));
 page.on('request', r => { if (!r.url().startsWith(base)) problems.push('left the site: ' + r.url()); });
 
@@ -176,6 +176,16 @@ await page.focus('#foldBtn');
 await page.keyboard.press('Enter');
 await idle();
 assert.match(await focused(), /^Row \d, column \d/, 'keyboard focus fell off the paper after the Fold button');
+
+// A new blot pops up from small. (Console warnings count as problems too, so a keyframe the browser rejects fails here.)
+await page.evaluate(() => blot.load({ cells: Array(36).fill(0), turn: 1, ply: 0, history: [] }));
+const pop = await page.evaluate(() => {
+  document.querySelectorAll('.cell')[20].click();
+  return document.querySelector('.paper > svg.ink [data-i="20"]').getAnimations()
+    .flatMap((a) => a.effect.getKeyframes()).filter((k) => k.transform).length;
+});
+assert.equal(pop, 3, 'a new blot did not pop');
+await idle();
 await page.click('#toMenu');
 
 // Against the computer as Blue: it moves first.

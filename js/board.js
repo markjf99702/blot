@@ -144,10 +144,15 @@ export class Board {
     if (reduceMotion()) return;
     const g = this.svg.querySelector(`[data-i="${i}"]`);
     if (!g) return;
+    // The blot's place as CSS wants it (units and commas), or the browser drops the keyframes.
+    const at = g.getAttribute('transform')
+      .replace(/translate\(([-\d.]+) ([-\d.]+)\)/g, 'translate($1px, $2px)')
+      .replace(/scale\(([-\d.]+) ([-\d.]+)\)/g, 'scale($1, $2)');
+    const grow = (s) => `${at} translate(50px, 50px) scale(${s}) translate(-50px, -50px)`;
     g.animate([
-      { transform: g.getAttribute('transform') + ' translate(50 50) scale(.3) translate(-50 -50)', opacity: 0.2 },
-      { transform: g.getAttribute('transform') + ' translate(50 50) scale(1.08) translate(-50 -50)', opacity: 1, offset: 0.7 },
-      { transform: g.getAttribute('transform'), opacity: 1 },
+      { transform: grow(0.3), opacity: 0.2 },
+      { transform: grow(1.08), opacity: 1, offset: 0.7 },
+      { transform: grow(1), opacity: 1 },
     ], { duration: 260, easing: 'cubic-bezier(.2,.8,.3,1.2)' });
   }
 
