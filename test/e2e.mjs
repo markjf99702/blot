@@ -268,6 +268,14 @@ await page2.click('#toMenu');
 assert.equal(await page2.textContent('#record'), 'Easy: 3 won, 1 lost · Normal: 2 won, 0 lost · Hard: 1 won, 0 lost');
 await other.close();
 
+// In dark mode Blue's dot in the score has the same light ring as the one on the menu, or it vanishes into the chip.
+const dark = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
+const page3 = await dark.newPage();
+await page3.goto(base);
+assert.equal(await page3.evaluate(() => getComputedStyle(document.querySelector('.score.blue .pot')).boxShadow),
+  await page3.evaluate(() => getComputedStyle(document.querySelector('.dot.blue')).boxShadow), "Blue's score dot has no ring");
+await dark.close();
+
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 for (const dir of ['js', 'css', 'fonts']) {
