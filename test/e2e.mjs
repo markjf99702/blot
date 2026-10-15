@@ -276,6 +276,14 @@ assert.equal(await page3.evaluate(() => getComputedStyle(document.querySelector(
   await page3.evaluate(() => getComputedStyle(document.querySelector('.dot.blue')).boxShadow), "Blue's score dot has no ring");
 await dark.close();
 
+// How to play opens at the top each time, with its moving examples in view.
+await page.click('#helpBtn');
+assert.ok(await page.evaluate(() => { const r = document.getElementById('rules'); r.scrollTop = 400; return r.scrollTop; }) > 0);
+await page.click('#closeRules');
+await page.click('#helpBtn');
+assert.equal(await page.evaluate(() => document.getElementById('rules').scrollTop), 0, 'How to play opened where it was last scrolled to');
+await page.click('#closeRules');
+
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 for (const dir of ['js', 'css', 'fonts']) {

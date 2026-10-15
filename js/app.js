@@ -453,6 +453,7 @@ document.addEventListener('keydown', (e) => {
 const rules = $('rules');
 function openRules() {
   rules.showModal();
+  rules.scrollTop = 0; // from the top, where the examples are
   startDemos(rules);
   try { localStorage.setItem(KEY + '.seenRules', '1'); } catch { /* ignore */ }
 }
