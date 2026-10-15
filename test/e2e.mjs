@@ -201,6 +201,22 @@ await page.waitForTimeout(2500);                     // longer than the preview 
 assert.equal(await page.evaluate(() => blot.game.now.ply), 8, 'the computer moved while you were on the menu');
 await page.click('#resume');
 await page.waitForFunction(() => blot.game.now.ply === 9 && blot.idle(), null, { timeout: 15000 });
+
+// A new game started while the last one's paper is still folding gets a clean sheet that takes taps straight away.
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 3, history: [] }), ownFold);
+const sheet = await page.evaluate(() => {
+  blot.play({ type: 'fold', axis: 'v', line: 3 });
+  document.getElementById('toMenu').click();
+  document.getElementById('startTwo').click();
+  const b = document.querySelectorAll('.cell')[14].getBoundingClientRect();
+  return {
+    flap: !!document.querySelector('.flap'),
+    clipped: document.querySelector('.paper > svg.ink').style.clipPath,
+    tappable: document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2).classList.contains('cell'),
+  };
+});
+assert.deepEqual(sheet, { flap: false, clipped: '', tappable: true }, "the last game's fold showed over the new one");
+await idle();
 await page.click('#toMenu');
 
 // Against the computer as Blue: it moves first.

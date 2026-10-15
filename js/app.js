@@ -166,6 +166,7 @@ function startGame(mode) {
   resetTurn();
   game = mode === 'ai' ? fresh('ai', prefs.level, prefs.side) : fresh('two', null, null);
   save();
+  board = null; // a fresh sheet, so a fold still playing out from the last game can't cover it
   openGame();
   // The first time, show how it works before anyone has to guess.
   let seen = true;
