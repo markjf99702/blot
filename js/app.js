@@ -376,6 +376,7 @@ function finish() {
 
 async function maybeComputer() {
   if (!game || game.mode !== 'ai' || game.over || busy || game.now.turn === game.human) return;
+  if ($('play').hidden) return; // not behind the menu: Carry on starts its turn
   const token = turnToken;
   busy = true;
   thinking = true;

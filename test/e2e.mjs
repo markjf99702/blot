@@ -196,6 +196,15 @@ await page.waitForTimeout(2500);                     // longer than the preview 
 assert.equal(await page.evaluate(() => blot.game.now.ply), 8, 'the computer moved while you were on the menu');
 await page.click('#resume');
 await page.waitForFunction(() => blot.game.now.ply === 9 && blot.idle(), null, { timeout: 15000 });
+// Nor does going there while your own fold is still playing out: the computer waits until you're back.
+const redWet = Array(36).fill(0);
+redWet[6] = 1 | 4;                                   // Blue has no wet ink, so the computer replies with a quick drop
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 2, history: [] }, { mode: 'ai', level: 'easy', human: 1 }), redWet);
+await page.evaluate(() => { blot.play({ type: 'fold', axis: 'v', line: 3 }); document.getElementById('toMenu').click(); });
+await page.waitForTimeout(3000);                     // longer than your fold and the computer's reply
+assert.equal(await page.evaluate(() => blot.game.now.ply), 3, 'the computer moved behind the menu after your fold');
+await page.click('#resume');
+await page.waitForFunction(() => blot.game.now.ply === 4 && blot.idle(), null, { timeout: 15000 });
 
 // A new game started while the last one's paper is still folding gets a clean sheet that takes taps straight away.
 await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 3, history: [] }), ownFold);
