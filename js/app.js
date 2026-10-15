@@ -148,8 +148,10 @@ function openMenu() {
 }
 
 function paintChoices() {
-  for (const b of $('levels').querySelectorAll('button')) b.setAttribute('aria-checked', b.dataset.level === prefs.level);
-  for (const b of $('sides').querySelectorAll('button')) b.setAttribute('aria-checked', +b.dataset.side === prefs.side);
+  // Each group is one stop for the Tab key, on the picked option; the arrow keys move between options.
+  const pick = (b, on) => { b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; };
+  for (const b of $('levels').querySelectorAll('button')) pick(b, b.dataset.level === prefs.level);
+  for (const b of $('sides').querySelectorAll('button')) pick(b, +b.dataset.side === prefs.side);
 }
 
 function paintRecord() {
@@ -416,11 +418,13 @@ $('sides').addEventListener('click', (e) => {
 });
 for (const group of [$('levels'), $('sides')]) {
   group.addEventListener('keydown', (e) => {
-    if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
     const bs = [...group.querySelectorAll('button')];
     const i = bs.indexOf(document.activeElement);
     if (i < 0) return;
-    const next = bs[(i + (e.key === 'ArrowRight' ? 1 : bs.length - 1)) % bs.length];
+    e.preventDefault(); // or the up and down arrows scroll the menu too
+    const next = bs[(i + step + bs.length) % bs.length];
     next.focus();
     next.click();
   });

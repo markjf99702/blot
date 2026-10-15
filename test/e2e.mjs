@@ -284,6 +284,17 @@ await page.click('#helpBtn');
 assert.equal(await page.evaluate(() => document.getElementById('rules').scrollTop), 0, 'How to play opened where it was last scrolled to');
 await page.click('#closeRules');
 
+// On the menu each choice is one stop for the Tab key, on what's picked, and the up and down arrows move the pick too.
+await page.click('#toMenu');
+assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('[role=radio]')].map((b) => b.tabIndex)), [0, -1, -1, -1, 0], 'every option is a Tab stop');
+await page.focus('[data-level="easy"]');
+await page.keyboard.press('ArrowDown');
+assert.equal(await page.getAttribute('[data-level="normal"]', 'aria-checked'), 'true', 'the down arrow did not pick the next level');
+await page.keyboard.press('Tab');
+assert.equal(await page.evaluate(() => document.activeElement.dataset.side), '2', 'Tab did not go straight to the picked ink');
+await page.keyboard.press('ArrowUp');
+assert.equal(await page.getAttribute('[data-side="1"]', 'aria-checked'), 'true', 'the up arrow did not pick the other ink');
+
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 for (const dir of ['js', 'css', 'fonts']) {
