@@ -4,7 +4,7 @@ import { EMPTY, RED, BLUE, MUD, WET, other, foldPairs, creases } from './rules.j
 
 export const LEVELS = {
   easy: { depth: 1, ms: 200, slack: 2 },
-  normal: { depth: 2, ms: 600, slack: 0.5 },
+  normal: { depth: 2, ms: 600, slack: 1.5 },
   hard: { depth: 7, ms: 1500, slack: 0 },
 };
 

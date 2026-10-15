@@ -153,6 +153,21 @@ test('in whole games, Easy and Normal never fold for nothing', () => {
   }
 });
 
+test('Normal still beats Easy most of the time', () => {
+  // Normal takes slightly worse moves on purpose. If it ever took too many, it would be no better than Easy.
+  const rnd = dice(17);
+  const engine = new Engine(n);
+  let normalWins = 0;
+  for (let g = 0; g < 20; g++) {
+    for (const side of [RED, BLUE]) {
+      let s = newGame(n);
+      while (!isOver(s)) s = play(s, engine.choose(s, s.turn === side ? 'normal' : 'easy', rnd).move).state;
+      if (leader(s.cells) === side) normalWins++;
+    }
+  }
+  assert.ok(normalWins >= 24, `Normal beat Easy in only ${normalWins} of 40 games`);
+});
+
 test('every level plays a legal game to the end', () => {
   const rnd = dice(3);
   const engine = new Engine(n);

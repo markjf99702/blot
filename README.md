@@ -26,7 +26,7 @@
 
 ## How the rules were settled
 
-Before any of the board was drawn, the computer played itself hundreds of times under different rules (`tools/sim.mjs` is what's left of that). Folds that pressed both players' ink ended nearly every game in a draw. When wet ink could be printed over after it dried, nobody folded until the paper was full. Making dry ink permanent, and letting only the folder's ink print, gave games where folds come every few turns and the stronger player wins. Red, moving first, still won most games. Giving Blue a whole point overcorrected (32 games between two Hard computers: Red 4, Blue 14, 14 draws), so instead Blue wins ties, and there are no draws. With that rule, 40 games between two Hard computers went 29 to 11 for Red, and 1,000 between two Normal ones went 602 to 398. Red still has an edge, and it doesn't shrink when both sides play better.
+Before any of the board was drawn, the computer played itself hundreds of times under different rules (`tools/sim.mjs` is what's left of that). Folds that pressed both players' ink ended nearly every game in a draw. When wet ink could be printed over after it dried, nobody folded until the paper was full. Making dry ink permanent, and letting only the folder's ink print, gave games where folds come every few turns and the stronger player wins. Red, moving first, still won most games. Giving Blue a whole point overcorrected (32 games between two Hard computers: Red 4, Blue 14, 14 draws), so instead Blue wins ties, and there are no draws. With that rule, 40 games between two Hard computers went 29 to 11 for Red, and 1,000 between two Normal ones went 539 to 461. Red still has an edge, and it doesn't shrink when both sides play better.
 
 ## Running it
 
