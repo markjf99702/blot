@@ -36,7 +36,7 @@ It's a static site: plain HTML, CSS and JavaScript modules, with no build step.
 npx serve .                   # or any static file server, then open the printed address
 npm install                   # only for the tools below: esbuild and upng-js
 npm test                      # the rules and the computer (Node 20+), then the real page in Chromium (needs Playwright)
-node tools/sim.mjs 20 6 hard normal   # the computer against itself: games, size, Red's level, Blue's level
+node tools/sim.mjs 20 6 hard normal   # games, size, then Red and Blue: a level, or a stand-in for a person (casual, careful)
 node tools/screenshots.mjs    # redraws docs/*.png and og.png
 node tools/make-icons.mjs     # redraws the PNG icons from icon.svg
 npm run build                 # dist/blot.html, the whole game in one file
