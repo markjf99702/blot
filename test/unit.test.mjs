@@ -102,6 +102,52 @@ test('the computer folds first when the other side is about to smear its wet ink
   assert.ok(changes.length >= 4, `it only printed ${changes.length}`);
 });
 
+// A whole sheet, one string per row: 0 blank, 1 red, 2 blue, 3 mud, 5 wet red, 6 wet blue.
+function sheet(rows, turn) {
+  const s = newGame(n);
+  s.cells = Uint8Array.from(rows.join(''), Number);
+  s.turn = turn;
+  return s;
+}
+
+test("the computer doesn't fold for nothing at the end of a game it has lost", () => {
+  // One blank left, Red 16 to Blue 17, Red to move. Dropping there, or the fold that prints onto it, ends
+  // the game level, and Blue wins a tie. A fold that printed nothing put the loss past what Easy could
+  // see, so Easy made that fold every time and handed Blue the last blank as well.
+  const oneLeft = sheet(['111231', '205111', '221131', '222222', '222211', '111222'], RED);
+  // Normal did the same with two blanks left: Blue 15 to Red 19, Blue to move.
+  const twoLeft = sheet(['226112', '121221', '221111', '220112', '021111', '221111'], BLUE);
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+  const engine = new Engine(n);
+  for (const s of [oneLeft, twoLeft]) {
+    for (const level of ['easy', 'normal', 'hard']) {
+      for (let k = 0; k < 5; k++) {
+        const { move } = engine.choose(s, level, rnd);
+        if (move.type === 'fold') assert.ok(play(s, move).changes.length > 0, `${level} folded for nothing`);
+      }
+    }
+  }
+});
+
+test('in whole games, Easy and Normal never fold for nothing', () => {
+  // Before the fix, about one game in seven on Easy and one in four on Normal ended with one.
+  let seed = 5;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);
+  const engine = new Engine(n);
+  for (const level of ['easy', 'normal']) {
+    for (let g = 0; g < 15; g++) {
+      let s = newGame(n);
+      while (!isOver(s)) {
+        const { move } = engine.choose(s, level, rnd);
+        const { state, changes } = play(s, move);
+        if (move.type === 'fold') assert.ok(changes.length > 0, `${level}, game ${g + 1}: a fold for nothing at ply ${s.ply}`);
+        s = state;
+      }
+    }
+  }
+});
+
 test('every level plays a legal game to the end', () => {
   let seed = 3;
   const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32);

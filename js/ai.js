@@ -173,12 +173,15 @@ export class Engine {
       done = depth;
       if (Math.abs(scores[0]) >= 100) break; // the result is settled
     }
-    const top = scores[0];
-    // A weaker player picks among the near-best moves, but never a fold that changes nothing.
-    let pool = root.filter((m, i) => scores[i] >= top - cfg.slack &&
-      (m.type === 'drop' || i === 0 || this.gain(state.cells, m.pairs, p) > 0));
-    if (!pool.length) pool = [root[0]];
-    const pick = pool[Math.floor(rnd() * pool.length)] || root[0];
+    // Only moves that change something. Near the end of a game it has lost, the search rates a fold that
+    // changes nothing above everything else, because it pushes the loss past what the search can see.
+    // While there's blank paper there's always a drop, so something is left.
+    const useful = root.map((m) => m.type === 'drop' || this.gain(state.cells, m.pairs, p) > 0);
+    const best = Math.max(0, useful.indexOf(true));
+    const top = scores[best];
+    // A weaker player picks among the near-best of those.
+    const pool = root.filter((m, i) => useful[i] && scores[i] >= top - cfg.slack);
+    const pick = pool[Math.floor(rnd() * pool.length)] || root[best];
     const move = pick.type === 'drop' ? { type: 'drop', at: pick.at } : { type: 'fold', axis: pick.axis, line: pick.line };
     return { move, depth: done, value: top, nodes: this.nodes };
   }
