@@ -160,7 +160,11 @@ function openGame() {
       label: 'The paper, six squares by six',
       onCell,
       onTab,
-      onTabHover: (axis, line) => { hover = axis ? { axis, line } : null; paint(); },
+      onTabHover: (axis, line) => {
+        if (busy || !isHumanTurn()) return; // nothing to preview while the paper moves, and no repaint over the computer's preview
+        hover = axis ? { axis, line } : null;
+        paint();
+      },
     });
   }
   paint();

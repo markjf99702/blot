@@ -124,6 +124,33 @@ assert.equal(await page.isVisible('#over'), true, 'no result once the last fold 
 assert.match(await page.textContent('#overTitle'), /Red wins/);
 await page.click('#overMenu');
 
+// The mouse passing over a tab leaves the computer's fold preview alone...
+const computerFolds = Array(36).fill(0);
+for (const r of [0, 1, 2, 3]) { computerFolds[r * 6] = 1 | 4; computerFolds[r * 6 + 5] = 2 | 4; }
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 8, history: [] }, { mode: 'ai', level: 'hard', human: 2 }), computerFolds);
+const hovered = await page.evaluate(() => new Promise((done) => {
+  const status = document.getElementById('status');
+  (function look() {
+    if (!status.textContent.includes('folds here')) { setTimeout(look, 20); return; }
+    document.querySelector('.tab-h0[data-line="2"]').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    done({ preview: !!document.querySelector('.paper > svg.ink .preview'), status: status.textContent });
+  })();
+}));
+assert.deepEqual(hovered, { preview: true, status: 'The computer folds here.' }, "the mouse over a tab wiped the computer's fold preview");
+await idle();
+// ...and doesn't show what your own fold prints before the paper lands.
+const ownFold = Array(36).fill(0);
+ownFold[6] = 1 | 4; ownFold[12] = 1 | 4; ownFold[29] = 2 | 4;
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 3, history: [] }), ownFold);
+const early = await page.evaluate(() => {
+  blot.play({ type: 'fold', axis: 'v', line: 3 });
+  document.querySelector('.tab-h0[data-line="4"]').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+  return !!document.querySelector('.paper > svg.ink .prints [data-i="11"]');
+});
+assert.equal(early, false, 'the mouse over a tab showed the prints before the fold landed');
+await idle();
+await page.click('#toMenu');
+
 // Against the computer as Blue: it moves first.
 await page.click('[data-level="easy"]');
 await page.click('[data-side="2"]');
