@@ -78,6 +78,32 @@ assert.equal(await page.isVisible('#over'), true, 'no result at the end');
 assert.match(await page.textContent('#overTitle'), /Red wins/);
 await page.click('#overMenu');
 
+// A win against the computer counts as soon as the last move is made, even if you don't stay to watch it land.
+const lastFold = Array.from({ length: 36 }, (_, i) => (i % 2 ? 1 : 2));
+lastFold[2] = 0; lastFold[3] = 1 | 4;                // one blank square, facing wet red across the middle crease
+const record = () => page.evaluate(() => JSON.parse(localStorage.getItem('blot.v1')).record);
+const winByFolding = async () => {
+  await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 35, history: [] }, { mode: 'ai', level: 'normal', human: 1 }), lastFold);
+  await page.click('.tab-v0[data-line="3"]');
+  await page.click('.tab-v0[data-line="3"]');
+};
+await winByFolding();
+await page.reload();                                 // while the paper is still folding
+assert.deepEqual(await record(), { normal: { w: 1, l: 0 } }, 'a win was lost when the page reloaded during the last fold');
+await winByFolding();
+await page.evaluate(() => { document.getElementById('toMenu').click(); document.getElementById('startTwo').click(); });
+assert.deepEqual(await record(), { normal: { w: 2, l: 0 } }, 'a win was lost when a new game started during the last fold');
+await idle();
+// A finished game that an earlier version saved without counting is counted when the page opens.
+await page.evaluate((cells) => {
+  const saved = JSON.parse(localStorage.getItem('blot.v1'));
+  Object.assign(saved.game, { mode: 'ai', level: 'hard', human: 1, over: true, recorded: false });
+  saved.game.now.cells = cells;
+  localStorage.setItem('blot.v1', JSON.stringify(saved));
+}, lastFold.map((v, i) => (i === 2 ? 1 : v & 3)));
+await page.reload();
+assert.match(await page.textContent('#record'), /Normal: 2 won, 0 lost · Hard: 1 won, 0 lost/);
+
 // Against the computer as Blue: it moves first.
 await page.click('[data-level="easy"]');
 await page.click('[data-side="2"]');

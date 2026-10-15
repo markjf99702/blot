@@ -298,7 +298,10 @@ async function move(m) {
   const id = game.id;
   game.past.push(before);
   game.now = after;
-  if (isOver(state)) game.over = true;
+  if (isOver(state)) {
+    game.over = true;
+    finish(); // counted now, not when the paper lands: you might not stay to watch
+  }
   save();
 
   busy = true;
@@ -313,7 +316,6 @@ async function move(m) {
   }
   if (!game || game.id !== id) { paint(); return; } // a new game started while this one animated
   busy = false;
-  if (game.over) finish();
   paint();
   maybeComputer();
 }
@@ -434,6 +436,7 @@ window.blot = {
   idle: () => !busy,
 };
 
+if (game && game.over) finish(); // an earlier version only counted a game once its last move had landed
 if (game && !game.over) openGame(); else openMenu();
 
 if (!('single' in document.documentElement.dataset) && 'serviceWorker' in navigator) {
