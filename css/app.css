@@ -438,7 +438,9 @@ svg .preview .ghost-mud { fill: var(--mud); fill-opacity: .45; stroke: var(--mud
     padding-right: max(var(--gutter), env(safe-area-inset-right));
     --paper-fit: min(calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom)) - 2 * var(--tab)), calc(100vw - max(var(--gutter), env(safe-area-inset-left)) - max(var(--gutter), env(safe-area-inset-right)) - 236px - 2 * var(--tab)), 600px);
   }
-  .play.over-up { --paper-size: var(--paper-fit); } /* the card is beside the paper here, so the paper keeps its size */
+  /* The card is beside the paper here, so the paper keeps its size. The card rises from just below the screen, and
+     without the clip the page would scroll for that moment. */
+  .play.over-up { --paper-size: var(--paper-fit); overflow: clip; }
   .stage { display: contents; }
   .table { grid-area: sheet; }
   .topbar { grid-area: top; flex-wrap: wrap; justify-content: space-between; }

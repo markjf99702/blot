@@ -329,6 +329,19 @@ await idle();
 await page.waitForFunction(() => !document.getElementById('over').hidden && !document.querySelector('.over-card').getAnimations().length);
 assert.ok(await page.evaluate(() => document.querySelector('.over-card').getBoundingClientRect().left >= document.querySelector('.paper').getBoundingClientRect().right),
   'the result card covers the paper on a phone on its side');
+// Nor does the page scroll for a moment while the card rises from just below the screen.
+const scrollsAsItRises = await page.evaluate(() => {
+  const card = document.querySelector('.over-card');
+  card.style.animation = 'none';
+  card.getBoundingClientRect();
+  card.style.animation = '';                          // the rise starts again...
+  const [rise] = card.getAnimations();
+  rise.pause();                                       // ...and stops where it begins, below where the card comes to rest
+  const extra = document.documentElement.scrollHeight - innerHeight;
+  rise.finish();
+  return extra;
+});
+assert.equal(scrollsAsItRises, 0, 'the page scrolls while the result card rises on a phone on its side');
 await page.click('#overMenu');
 
 // On a short screen the result card doesn't hide the bottom of the paper: while the card is up the paper gives way,
