@@ -308,6 +308,30 @@ assert.equal(await page.evaluate(() => document.activeElement.dataset.side), '2'
 await page.keyboard.press('ArrowUp');
 assert.equal(await page.getAttribute('[data-side="1"]', 'aria-checked'), 'true', 'the up arrow did not pick the other ink');
 
+// A phone on its side: the paper fills the height, with the scores, the status and the buttons beside it, and the
+// result card comes up beside the paper, not over it.
+await page.setViewportSize({ width: 667, height: 375 });
+await page.evaluate((cells) => blot.load({ cells, turn: 1, ply: 2, history: [] }), bothWet);
+const onItsSide = await page.evaluate(() => {
+  const r = (s) => document.querySelector(s).getBoundingClientRect();
+  const paper = r('.paper');
+  const tabs = [...document.querySelectorAll('.tab')].map((t) => t.getBoundingClientRect());
+  const crowded = tabs.some((a, i) => tabs.some((b, j) => j > i && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1));
+  return {
+    paper: paper.width >= 300, beside: r('.topbar').left >= paper.right && r('.bar').left >= paper.right, crowded,
+    fits: document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight,
+  };
+});
+assert.deepEqual(onItsSide, { paper: true, beside: true, crowded: false, fits: true }, 'the paper is squeezed on a phone on its side');
+await page.evaluate(() => blot.load({ cells: Array.from({ length: 36 }, (_, i) => (i === 0 ? 0 : i % 2 ? 1 : 2)), turn: 1, ply: 34, history: [] }));
+await cell(0).click();
+await idle();
+await page.waitForFunction(() => !document.getElementById('over').hidden && !document.querySelector('.over-card').getAnimations().length);
+assert.ok(await page.evaluate(() => document.querySelector('.over-card').getBoundingClientRect().left >= document.querySelector('.paper').getBoundingClientRect().right),
+  'the result card covers the paper on a phone on its side');
+await page.click('#overMenu');
+await page.setViewportSize({ width: 390, height: 844 });
+
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
 for (const dir of ['js', 'css', 'fonts']) {

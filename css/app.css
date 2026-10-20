@@ -415,3 +415,26 @@ svg .preview .ghost-mud { fill: var(--mud); fill-opacity: .45; stroke: var(--mud
   .play { --tab: 34px; --gutter: 16px; }
   .status { font-size: 1.05rem; }
 }
+
+/* A phone on its side: the paper fills the height on the left, and the scores, the status and the buttons stand in
+   a column beside it (236px is that column at its narrowest, 220px, and the gap). The result card comes up in that
+   column, reaching to 8px from the paper, so it doesn't cover the paper. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .play {
+    position: relative;
+    display: grid;
+    grid-template: 'sheet top' auto 'sheet bar' minmax(0, 1fr) / auto minmax(220px, 400px);
+    justify-content: center;
+    column-gap: 16px;
+    padding-left: max(var(--gutter), env(safe-area-inset-left));
+    padding-right: max(var(--gutter), env(safe-area-inset-right));
+    --paper-size: min(calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom)) - 2 * var(--tab)), calc(100vw - max(var(--gutter), env(safe-area-inset-left)) - max(var(--gutter), env(safe-area-inset-right)) - 236px - 2 * var(--tab)), 600px);
+  }
+  .stage { display: contents; }
+  .table { grid-area: sheet; }
+  .topbar { grid-area: top; flex-wrap: wrap; justify-content: space-between; }
+  .scores { order: 1; flex-basis: 100%; }
+  .bar { grid-area: bar; align-self: center; }
+  .over { position: absolute; grid-area: 1 / 2 / 3 / 3; left: calc(-8px - var(--tab)); padding: 0; background: none; }
+  .over-card h2 { font-size: 1.75rem; }
+}
