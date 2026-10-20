@@ -239,6 +239,7 @@ function paint() {
   if (pending && preview) $('foldBtn').textContent = preview.changes.length ? `Fold (+${preview.changes.length})` : 'Fold';
   $('againBar').hidden = !ended || showOver;
   $('over').hidden = !ended || !showOver;
+  $('play').classList.toggle('over-up', ended && showOver); // on a short screen the paper makes room for the card
 
   // The squares and tabs are disabled while a move plays out, which drops keyboard focus; put it back.
   if (refocus && human && !busy) {
@@ -451,6 +452,9 @@ $('again').addEventListener('click', again);
 $('againBar').addEventListener('click', again);
 $('overMenu').addEventListener('click', openMenu);
 $('overLook').addEventListener('click', () => { showOver = false; paint(); });
+// The paper needs the result card's height to make room for it (.over-up in css/app.css). Long lines wrap, so measure it.
+const overCard = document.querySelector('.over-card');
+new ResizeObserver(() => $('play').style.setProperty('--over-h', `${overCard.offsetHeight}px`)).observe(overCard, { box: 'border-box' });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && pending) { pending = null; paint(); }
 });

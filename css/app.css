@@ -188,8 +188,16 @@ h1 {
   --gutter: 8px;
   --tab: 24px;
   padding: max(8px, env(safe-area-inset-top)) var(--gutter) max(10px, env(safe-area-inset-bottom));
-  --paper-size: min(calc(100vw - 2 * var(--gutter) - 2 * var(--tab)), calc(100dvh - 222px - 2 * var(--tab) - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 600px);
+  --paper-fit: min(calc(100vw - 2 * var(--gutter) - 2 * var(--tab)), calc(100dvh - 222px - 2 * var(--tab) - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 600px);
+  --paper-size: var(--paper-fit);
 }
+/* While the result card is up, on a screen too short for both, the paper keeps its top edge and gives up just
+   enough at the bottom to clear the card. The sheet sits in the middle, so its top is about (screen - paper) / 2
+   down. --over-h is the card's height, from js/app.js. */
+.play.over-up {
+  --paper-size: min(var(--paper-fit), calc((100dvh + var(--paper-fit) - max(8px, env(safe-area-inset-top)) + max(10px, env(safe-area-inset-bottom))) / 2 - max(var(--gutter), env(safe-area-inset-bottom)) - var(--over-h, 0px) - 8px));
+}
+.play.over-up .bar { padding-bottom: calc(var(--paper-fit) - var(--paper-size)); } /* what the paper gave up, so its top stays put */
 .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
 .topbar { display: flex; align-items: center; gap: 10px; max-width: 640px; width: 100%; margin: 0 auto; }
 .scores { flex: 1; display: flex; gap: 8px; justify-content: center; }
@@ -428,8 +436,9 @@ svg .preview .ghost-mud { fill: var(--mud); fill-opacity: .45; stroke: var(--mud
     column-gap: 16px;
     padding-left: max(var(--gutter), env(safe-area-inset-left));
     padding-right: max(var(--gutter), env(safe-area-inset-right));
-    --paper-size: min(calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom)) - 2 * var(--tab)), calc(100vw - max(var(--gutter), env(safe-area-inset-left)) - max(var(--gutter), env(safe-area-inset-right)) - 236px - 2 * var(--tab)), 600px);
+    --paper-fit: min(calc(100dvh - max(8px, env(safe-area-inset-top)) - max(10px, env(safe-area-inset-bottom)) - 2 * var(--tab)), calc(100vw - max(var(--gutter), env(safe-area-inset-left)) - max(var(--gutter), env(safe-area-inset-right)) - 236px - 2 * var(--tab)), 600px);
   }
+  .play.over-up { --paper-size: var(--paper-fit); } /* the card is beside the paper here, so the paper keeps its size */
   .stage { display: contents; }
   .table { grid-area: sheet; }
   .topbar { grid-area: top; flex-wrap: wrap; justify-content: space-between; }

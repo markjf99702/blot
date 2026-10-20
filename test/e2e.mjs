@@ -330,7 +330,32 @@ await page.waitForFunction(() => !document.getElementById('over').hidden && !doc
 assert.ok(await page.evaluate(() => document.querySelector('.over-card').getBoundingClientRect().left >= document.querySelector('.paper').getBoundingClientRect().right),
   'the result card covers the paper on a phone on its side');
 await page.click('#overMenu');
-await page.setViewportSize({ width: 390, height: 844 });
+
+// On a short screen the result card doesn't hide the bottom of the paper: while the card is up the paper gives way,
+// only where they don't both fit, and Look at the paper gives it its room back. A tie with mud is the longest result.
+const tie = Array.from({ length: 36 }, (_, i) => (i % 2 ? 1 : 2));
+tie[0] = 0; tie[1] = 2; tie[2] = 3; tie[4] = 3;      // Blue takes the last square for a 17-17 tie, with 2 squares of mud
+const paperSize = () => page.evaluate(() => document.querySelector('.paper').getBoundingClientRect().width);
+const endAt = async (width, height) => {
+  await page.setViewportSize({ width, height });
+  await page.evaluate((cells) => blot.load({ cells, turn: 2, ply: 35, history: [] }), tie);
+  const before = await paperSize();
+  await cell(0).click();
+  await idle();
+  await page.waitForFunction(() => !document.getElementById('over').hidden && !document.querySelector('.over-card').getAnimations().length);
+  const clear = await page.evaluate(() => document.querySelector('.over-card').getBoundingClientRect().top - document.querySelector('.paper').getBoundingClientRect().bottom);
+  return { before, during: await paperSize(), clear };
+};
+let ended;
+for (const [w, h] of [[375, 667], [1366, 768]]) {
+  ended = await endAt(w, h);
+  assert.ok(ended.clear >= 0, `the result card covers ${-ended.clear}px of the paper at ${w}x${h}`);
+}
+await page.click('#overLook');
+assert.equal(await paperSize(), ended.before, 'Look at the paper did not give the paper its room back');
+ended = await endAt(390, 844);
+assert.equal(ended.during, ended.before, 'the paper shrank for the result card on a screen with room for both');
+await page.click('#overMenu');
 
 // The offline copy lists every file the page needs.
 const sw = await readFile(join(root, 'sw.js'), 'utf8');
