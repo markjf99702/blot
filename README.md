@@ -55,5 +55,5 @@ To put it online with GitHub Pages: **Settings → Pages → Build and deploymen
 - `js/app.js`: the page: the menu, turns, the computer's moves, undo, saving and the result.
 - `js/demos.js`: the moving examples in How to play. `js/logo.js`: the butterfly print on the menu.
 - `fonts/`: Fraunces and Figtree (SIL Open Font License), served from here so nothing loads from elsewhere.
-- `sw.js`: keeps a copy for playing offline. `npm test` checks that it lists every file the page needs.
+- `sw.js`: keeps a copy for playing offline. `npm test` checks that it lists every file the page needs. On a connection that isn't answering, a page opens from that copy after four seconds. `FILES` in it is a fingerprint of the files it keeps: change one and `npm test` says what to set it to, so a release never leaves the copy half old.
 - `tools/`: the screenshot, icon and simulation scripts. `scripts/build.mjs`: the single-file build.
